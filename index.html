@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="ja">
 
@@ -12,9 +11,7 @@
 
   <title>バーコードPOS</title>
 
-  <!-- Quagga2 -->
   <script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2@1.7.0/dist/quagga.min.js"></script>
-
 
   <style>
 
@@ -23,286 +20,156 @@
     }
 
     body {
-
       margin: 0;
-
       padding: 20px;
-
       font-family:
         -apple-system,
         BlinkMacSystemFont,
         "Segoe UI",
         sans-serif;
-
       background: #f0f2f5;
-
     }
-
 
     .container {
-
       max-width: 480px;
-
       margin: auto;
-
       background: white;
-
       padding: 20px;
-
       border-radius: 14px;
-
-      box-shadow:
-        0 2px 12px rgba(0,0,0,0.1);
-
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
     }
-
 
     h1 {
-
       text-align: center;
-
       font-size: 22px;
-
-      margin-top: 0;
-
-      margin-bottom: 20px;
-
+      margin: 0 0 15px;
     }
-
 
     #interactive {
-
       width: 100%;
-
       height: 280px;
-
       background: #000;
-
       border-radius: 10px;
-
       overflow: hidden;
-
       position: relative;
-
       display: none;
-
       margin-bottom: 15px;
-
     }
-
 
     #interactive video {
-
       width: 100%;
-
       height: 100%;
-
       object-fit: cover;
-
     }
-
 
     #interactive canvas {
-
       display: none;
-
     }
-
 
     .guide {
-
       position: absolute;
-
       z-index: 10;
-
       left: 10%;
-
       right: 10%;
-
       top: 50%;
-
       height: 80px;
-
       transform: translateY(-50%);
-
       border: 2px solid white;
-
       pointer-events: none;
-
     }
-
 
     button {
-
       width: 100%;
-
       padding: 14px;
-
       border: none;
-
       border-radius: 8px;
-
       font-size: 17px;
-
       margin-bottom: 12px;
-
       cursor: pointer;
-
     }
-
 
     #cameraBtn {
-
       background: #4caf50;
-
       color: white;
-
     }
-
 
     #cameraBtn.stop {
-
       background: #f44336;
-
     }
-
 
     #submitBtn {
-
       background: #2196f3;
-
       color: white;
-
     }
-
 
     button:disabled {
-
       background: #ccc !important;
-
     }
-
 
     label {
-
       display: block;
-
       margin-bottom: 5px;
-
       color: #555;
-
       font-size: 14px;
-
     }
-
 
     input {
-
       width: 100%;
-
       padding: 12px;
-
       border: 1px solid #ccc;
-
       border-radius: 8px;
-
       font-size: 18px;
-
       margin-bottom: 16px;
-
     }
-
 
     .quantity {
-
       display: flex;
-
       gap: 8px;
-
       align-items: center;
-
     }
-
 
     .quantity button {
-
       width: 55px;
-
       height: 48px;
-
       padding: 0;
-
       background: #e0e0e0;
-
       color: #333;
-
       margin: 0;
-
       font-size: 22px;
-
     }
-
 
     .quantity input {
-
       flex: 1;
-
       text-align: center;
-
       margin: 0;
-
     }
-
 
     #message {
-
       display: none;
-
       padding: 12px;
-
       border-radius: 8px;
-
       margin-bottom: 12px;
-
       text-align: center;
-
       white-space: pre-wrap;
-
     }
-
 
     #message.success {
-
       display: block;
-
       background: #e8f5e9;
-
       color: #2e7d32;
-
     }
-
 
     #message.error {
-
       display: block;
-
       background: #ffebee;
-
       color: #c62828;
-
     }
 
-
     .status {
-
       text-align: center;
-
       font-size: 13px;
-
       color: #777;
-
       margin-bottom: 10px;
-
     }
 
   </style>
@@ -312,11 +179,9 @@
 
 <body>
 
-
 <div class="container">
 
   <h1>📦 バーコードPOS</h1>
-
 
   <div
     class="status"
@@ -343,10 +208,7 @@
   </button>
 
 
-  <label>
-    JANコード
-  </label>
-
+  <label>JANコード</label>
 
   <input
     type="text"
@@ -356,10 +218,7 @@
     placeholder="バーコードを読み取ってください">
 
 
-  <label>
-    数量（出庫はマイナス）
-  </label>
-
+  <label>数量（出庫はマイナス）</label>
 
   <div class="quantity">
 
@@ -367,12 +226,10 @@
       －
     </button>
 
-
     <input
       type="number"
       id="quantity"
       value="1">
-
 
     <button onclick="changeQuantity(1)">
       ＋
@@ -388,17 +245,27 @@
 
 
   <button
-    id="submitBtn">
+    id="submitBtn"
+    onclick="submitData()">
 
     ✅ 登録
 
   </button>
 
-
 </div>
 
 
 <script>
+
+
+/*
+ * ==================================================
+ * ★★★ ここにGASのWebアプリURLを入れてください ★★★
+ * ==================================================
+ */
+
+const GAS_URL =
+  "https://script.google.com/macros/s/ここにGASのID/exec";
 
 
 let scanning = false;
@@ -407,11 +274,10 @@ let detectedHandler = null;
 
 
 /*
- * ====================================
- * カメラ開始
- * ====================================
+ * ==================================================
+ * カメラ
+ * ==================================================
  */
-
 
 function toggleCamera() {
 
@@ -431,31 +297,16 @@ function toggleCamera() {
 function startCamera() {
 
   const viewer =
-    document.getElementById(
-      "interactive"
-    );
-
+    document.getElementById("interactive");
 
   const button =
-    document.getElementById(
-      "cameraBtn"
-    );
-
+    document.getElementById("cameraBtn");
 
   const status =
-    document.getElementById(
-      "status"
-    );
+    document.getElementById("status");
 
 
-  /*
-   * HTTPS確認
-   */
-
-  if (
-    location.protocol !==
-    "https:"
-  ) {
+  if (location.protocol !== "https:") {
 
     showMessage(
       "HTTPS接続が必要です。",
@@ -467,13 +318,9 @@ function startCamera() {
   }
 
 
-  viewer.style.display =
-    "block";
+  viewer.style.display = "block";
 
-
-  button.disabled =
-    true;
-
+  button.disabled = true;
 
   button.textContent =
     "📷 カメラ起動中...";
@@ -483,20 +330,12 @@ function startCamera() {
     "カメラを起動しています";
 
 
-  /*
-   * 以前のQuaggaを停止
-   */
-
   try {
 
     Quagga.stop();
 
   } catch (e) {}
 
-
-  /*
-   * 検出イベントを整理
-   */
 
   if (detectedHandler) {
 
@@ -511,21 +350,14 @@ function startCamera() {
   }
 
 
-  /*
-   * バーコード検出
-   */
-
   detectedHandler =
     function(result) {
-
 
       if (
         !result ||
         !result.codeResult
       ) {
-
         return;
-
       }
 
 
@@ -534,33 +366,16 @@ function startCamera() {
 
 
       if (!code) {
-
         return;
-
       }
 
 
-      /*
-       * JANコードへ入力
-       */
+      document.getElementById(
+        "barcode"
+      ).value = code;
 
-      document
-        .getElementById(
-          "barcode"
-        )
-        .value = code;
-
-
-      /*
-       * カメラ停止
-       */
 
       stopCamera();
-
-
-      /*
-       * 音
-       */
 
       beep();
 
@@ -571,11 +386,9 @@ function startCamera() {
       );
 
 
-      document
-        .getElementById(
-          "barcode"
-        )
-        .focus();
+      document.getElementById(
+        "barcode"
+      ).focus();
 
     };
 
@@ -584,10 +397,6 @@ function startCamera() {
     detectedHandler
   );
 
-
-  /*
-   * Quagga開始
-   */
 
   Quagga.init({
 
@@ -615,7 +424,6 @@ function startCamera() {
 
     },
 
-
     locator: {
 
       patchSize: "medium",
@@ -624,48 +432,36 @@ function startCamera() {
 
     },
 
-
     numOfWorkers: 2,
 
     frequency: 10,
 
-
     decoder: {
 
       readers: [
-
         "ean_reader",
-
         "ean_8_reader",
-
         "code_128_reader"
-
       ]
 
     },
-
 
     locate: true
 
   }, function(error) {
 
 
-    button.disabled =
-      false;
+    button.disabled = false;
 
 
     if (error) {
 
       console.error(error);
 
-
-      viewer.style.display =
-        "none";
-
+      viewer.style.display = "none";
 
       button.textContent =
         "📷 バーコードを読み取る";
-
 
       status.textContent =
         "カメラ起動失敗";
@@ -682,24 +478,15 @@ function startCamera() {
     }
 
 
-    /*
-     * カメラ開始
-     */
-
     Quagga.start();
 
-
-    scanning =
-      true;
+    scanning = true;
 
 
     button.textContent =
       "⏹ カメラ停止";
 
-
-    button.classList.add(
-      "stop"
-    );
+    button.classList.add("stop");
 
 
     status.textContent =
@@ -711,31 +498,24 @@ function startCamera() {
 
 
 /*
- * ====================================
+ * ==================================================
  * カメラ停止
- * ====================================
+ * ==================================================
  */
-
 
 function stopCamera() {
 
   try {
-
     Quagga.stop();
-
   } catch (e) {}
 
 
-  scanning =
-    false;
+  scanning = false;
 
 
-  document
-    .getElementById(
-      "interactive"
-    )
-    .style.display =
-    "none";
+  document.getElementById(
+    "interactive"
+  ).style.display = "none";
 
 
   const button =
@@ -744,35 +524,27 @@ function stopCamera() {
     );
 
 
-  button.disabled =
-    false;
-
+  button.disabled = false;
 
   button.textContent =
     "📷 バーコードを読み取る";
 
-
-  button.classList.remove(
-    "stop"
-  );
+  button.classList.remove("stop");
 
 
-  document
-    .getElementById(
-      "status"
-    )
-    .textContent =
+  document.getElementById(
+    "status"
+  ).textContent =
     "カメラ準備OK";
 
 }
 
 
 /*
- * ====================================
+ * ==================================================
  * 数量
- * ====================================
+ * ==================================================
  */
-
 
 function changeQuantity(delta) {
 
@@ -790,27 +562,228 @@ function changeQuantity(delta) {
 
 
   if (isNaN(value)) {
-
     value = 0;
-
   }
 
 
   value += delta;
 
-
-  input.value =
-    value;
+  input.value = value;
 
 }
 
 
 /*
- * ====================================
- * 効果音
- * ====================================
+ * ==================================================
+ * GASへ登録
+ * ==================================================
  */
 
+function submitData() {
+
+  const barcode =
+    document.getElementById(
+      "barcode"
+    ).value.trim();
+
+
+  const quantity =
+    parseInt(
+      document.getElementById(
+        "quantity"
+      ).value,
+      10
+    );
+
+
+  if (!barcode) {
+
+    showMessage(
+      "JANコードを入力してください。",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  if (
+    isNaN(quantity) ||
+    quantity === 0
+  ) {
+
+    showMessage(
+      "数量を正しく入力してください。",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  const button =
+    document.getElementById(
+      "submitBtn"
+    );
+
+
+  button.disabled = true;
+
+  button.textContent =
+    "登録中...";
+
+
+  /*
+   * CORSの事前確認を避けるため、
+   * text/plainで送信
+   */
+
+  const params = new URLSearchParams();
+
+  params.append(
+    "barcode",
+    barcode
+  );
+
+  params.append(
+    "quantity",
+    quantity
+  );
+
+
+  fetch(
+    GAS_URL,
+    {
+
+      method: "POST",
+
+      headers: {
+
+        "Content-Type":
+          "application/x-www-form-urlencoded;charset=UTF-8"
+
+      },
+
+      body:
+        params.toString(),
+
+      redirect: "follow"
+
+    }
+  )
+  .then(function(response) {
+
+    return response.text();
+
+  })
+  .then(function(text) {
+
+    console.log(
+      "GAS response:",
+      text
+    );
+
+
+    /*
+     * GASからの返答が取得できた場合
+     */
+
+    showMessage(
+      "✅ 登録しました！",
+      "success"
+    );
+
+
+    /*
+     * 入力をクリア
+     */
+
+    document.getElementById(
+      "barcode"
+    ).value = "";
+
+
+    document.getElementById(
+      "quantity"
+    ).value = "1";
+
+
+  })
+  .catch(function(error) {
+
+    console.error(error);
+
+
+    showMessage(
+      "❌ 登録に失敗しました。\n" +
+      error.message,
+      "error"
+    );
+
+  })
+  .finally(function() {
+
+    button.disabled = false;
+
+    button.textContent =
+      "✅ 登録";
+
+  });
+
+}
+
+
+/*
+ * ==================================================
+ * メッセージ
+ * ==================================================
+ */
+
+function showMessage(
+  text,
+  type
+) {
+
+  const element =
+    document.getElementById(
+      "message"
+    );
+
+
+  element.textContent =
+    text;
+
+
+  element.className =
+    type;
+
+
+  element.style.display =
+    "block";
+
+
+  setTimeout(
+    function() {
+
+      element.className = "";
+
+      element.style.display =
+        "none";
+
+    },
+    5000
+  );
+
+}
+
+
+/*
+ * ==================================================
+ * 効果音
+ * ==================================================
+ */
 
 function beep() {
 
@@ -822,9 +795,7 @@ function beep() {
 
 
     if (!AudioContext) {
-
       return;
-
     }
 
 
@@ -865,7 +836,6 @@ function beep() {
 
     oscillator.start();
 
-
     oscillator.stop(
       context.currentTime + 0.25
     );
@@ -879,57 +849,8 @@ function beep() {
 
 }
 
-
-/*
- * ====================================
- * メッセージ
- * ====================================
- */
-
-
-function showMessage(
-  text,
-  type
-) {
-
-  const element =
-    document.getElementById(
-      "message"
-    );
-
-
-  element.textContent =
-    text;
-
-
-  element.className =
-    type;
-
-
-  element.style.display =
-    "block";
-
-
-  setTimeout(
-    function() {
-
-      element.className =
-        "";
-
-      element.style.display =
-        "none";
-
-    },
-    5000
-  );
-
-}
-
 </script>
-
 
 </body>
 
 </html>
-```
-
