@@ -1,1 +1,935 @@
+```html
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0">
+
+  <title>バーコードPOS</title>
+
+  <!-- Quagga2 -->
+  <script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2@1.7.0/dist/quagga.min.js"></script>
+
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+
+      margin: 0;
+
+      padding: 20px;
+
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      background: #f0f2f5;
+
+    }
+
+
+    .container {
+
+      max-width: 480px;
+
+      margin: auto;
+
+      background: white;
+
+      padding: 20px;
+
+      border-radius: 14px;
+
+      box-shadow:
+        0 2px 12px rgba(0,0,0,0.1);
+
+    }
+
+
+    h1 {
+
+      text-align: center;
+
+      font-size: 22px;
+
+      margin-top: 0;
+
+      margin-bottom: 20px;
+
+    }
+
+
+    #interactive {
+
+      width: 100%;
+
+      height: 280px;
+
+      background: #000;
+
+      border-radius: 10px;
+
+      overflow: hidden;
+
+      position: relative;
+
+      display: none;
+
+      margin-bottom: 15px;
+
+    }
+
+
+    #interactive video {
+
+      width: 100%;
+
+      height: 100%;
+
+      object-fit: cover;
+
+    }
+
+
+    #interactive canvas {
+
+      display: none;
+
+    }
+
+
+    .guide {
+
+      position: absolute;
+
+      z-index: 10;
+
+      left: 10%;
+
+      right: 10%;
+
+      top: 50%;
+
+      height: 80px;
+
+      transform: translateY(-50%);
+
+      border: 2px solid white;
+
+      pointer-events: none;
+
+    }
+
+
+    button {
+
+      width: 100%;
+
+      padding: 14px;
+
+      border: none;
+
+      border-radius: 8px;
+
+      font-size: 17px;
+
+      margin-bottom: 12px;
+
+      cursor: pointer;
+
+    }
+
+
+    #cameraBtn {
+
+      background: #4caf50;
+
+      color: white;
+
+    }
+
+
+    #cameraBtn.stop {
+
+      background: #f44336;
+
+    }
+
+
+    #submitBtn {
+
+      background: #2196f3;
+
+      color: white;
+
+    }
+
+
+    button:disabled {
+
+      background: #ccc !important;
+
+    }
+
+
+    label {
+
+      display: block;
+
+      margin-bottom: 5px;
+
+      color: #555;
+
+      font-size: 14px;
+
+    }
+
+
+    input {
+
+      width: 100%;
+
+      padding: 12px;
+
+      border: 1px solid #ccc;
+
+      border-radius: 8px;
+
+      font-size: 18px;
+
+      margin-bottom: 16px;
+
+    }
+
+
+    .quantity {
+
+      display: flex;
+
+      gap: 8px;
+
+      align-items: center;
+
+    }
+
+
+    .quantity button {
+
+      width: 55px;
+
+      height: 48px;
+
+      padding: 0;
+
+      background: #e0e0e0;
+
+      color: #333;
+
+      margin: 0;
+
+      font-size: 22px;
+
+    }
+
+
+    .quantity input {
+
+      flex: 1;
+
+      text-align: center;
+
+      margin: 0;
+
+    }
+
+
+    #message {
+
+      display: none;
+
+      padding: 12px;
+
+      border-radius: 8px;
+
+      margin-bottom: 12px;
+
+      text-align: center;
+
+      white-space: pre-wrap;
+
+    }
+
+
+    #message.success {
+
+      display: block;
+
+      background: #e8f5e9;
+
+      color: #2e7d32;
+
+    }
+
+
+    #message.error {
+
+      display: block;
+
+      background: #ffebee;
+
+      color: #c62828;
+
+    }
+
+
+    .status {
+
+      text-align: center;
+
+      font-size: 13px;
+
+      color: #777;
+
+      margin-bottom: 10px;
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+<div class="container">
+
+  <h1>📦 バーコードPOS</h1>
+
+
+  <div
+    class="status"
+    id="status">
+
+    カメラ準備OK
+
+  </div>
+
+
+  <div id="interactive">
+
+    <div class="guide"></div>
+
+  </div>
+
+
+  <button
+    id="cameraBtn"
+    onclick="toggleCamera()">
+
+    📷 バーコードを読み取る
+
+  </button>
+
+
+  <label>
+    JANコード
+  </label>
+
+
+  <input
+    type="text"
+    id="barcode"
+    inputmode="numeric"
+    autocomplete="off"
+    placeholder="バーコードを読み取ってください">
+
+
+  <label>
+    数量（出庫はマイナス）
+  </label>
+
+
+  <div class="quantity">
+
+    <button onclick="changeQuantity(-1)">
+      －
+    </button>
+
+
+    <input
+      type="number"
+      id="quantity"
+      value="1">
+
+
+    <button onclick="changeQuantity(1)">
+      ＋
+    </button>
+
+  </div>
+
+
+  <br>
+
+
+  <div id="message"></div>
+
+
+  <button
+    id="submitBtn">
+
+    ✅ 登録
+
+  </button>
+
+
+</div>
+
+
+<script>
+
+
+let scanning = false;
+
+let detectedHandler = null;
+
+
+/*
+ * ====================================
+ * カメラ開始
+ * ====================================
+ */
+
+
+function toggleCamera() {
+
+  if (scanning) {
+
+    stopCamera();
+
+  } else {
+
+    startCamera();
+
+  }
+
+}
+
+
+function startCamera() {
+
+  const viewer =
+    document.getElementById(
+      "interactive"
+    );
+
+
+  const button =
+    document.getElementById(
+      "cameraBtn"
+    );
+
+
+  const status =
+    document.getElementById(
+      "status"
+    );
+
+
+  /*
+   * HTTPS確認
+   */
+
+  if (
+    location.protocol !==
+    "https:"
+  ) {
+
+    showMessage(
+      "HTTPS接続が必要です。",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  viewer.style.display =
+    "block";
+
+
+  button.disabled =
+    true;
+
+
+  button.textContent =
+    "📷 カメラ起動中...";
+
+
+  status.textContent =
+    "カメラを起動しています";
+
+
+  /*
+   * 以前のQuaggaを停止
+   */
+
+  try {
+
+    Quagga.stop();
+
+  } catch (e) {}
+
+
+  /*
+   * 検出イベントを整理
+   */
+
+  if (detectedHandler) {
+
+    try {
+
+      Quagga.offDetected(
+        detectedHandler
+      );
+
+    } catch (e) {}
+
+  }
+
+
+  /*
+   * バーコード検出
+   */
+
+  detectedHandler =
+    function(result) {
+
+
+      if (
+        !result ||
+        !result.codeResult
+      ) {
+
+        return;
+
+      }
+
+
+      const code =
+        result.codeResult.code;
+
+
+      if (!code) {
+
+        return;
+
+      }
+
+
+      /*
+       * JANコードへ入力
+       */
+
+      document
+        .getElementById(
+          "barcode"
+        )
+        .value = code;
+
+
+      /*
+       * カメラ停止
+       */
+
+      stopCamera();
+
+
+      /*
+       * 音
+       */
+
+      beep();
+
+
+      showMessage(
+        "読み取り成功：\n" + code,
+        "success"
+      );
+
+
+      document
+        .getElementById(
+          "barcode"
+        )
+        .focus();
+
+    };
+
+
+  Quagga.onDetected(
+    detectedHandler
+  );
+
+
+  /*
+   * Quagga開始
+   */
+
+  Quagga.init({
+
+    inputStream: {
+
+      type: "LiveStream",
+
+      target: viewer,
+
+      constraints: {
+
+        width: {
+          ideal: 1280
+        },
+
+        height: {
+          ideal: 720
+        },
+
+        facingMode: {
+          ideal: "environment"
+        }
+
+      }
+
+    },
+
+
+    locator: {
+
+      patchSize: "medium",
+
+      halfSample: true
+
+    },
+
+
+    numOfWorkers: 2,
+
+    frequency: 10,
+
+
+    decoder: {
+
+      readers: [
+
+        "ean_reader",
+
+        "ean_8_reader",
+
+        "code_128_reader"
+
+      ]
+
+    },
+
+
+    locate: true
+
+  }, function(error) {
+
+
+    button.disabled =
+      false;
+
+
+    if (error) {
+
+      console.error(error);
+
+
+      viewer.style.display =
+        "none";
+
+
+      button.textContent =
+        "📷 バーコードを読み取る";
+
+
+      status.textContent =
+        "カメラ起動失敗";
+
+
+      showMessage(
+        "カメラを起動できませんでした。\n" +
+        error.message,
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    /*
+     * カメラ開始
+     */
+
+    Quagga.start();
+
+
+    scanning =
+      true;
+
+
+    button.textContent =
+      "⏹ カメラ停止";
+
+
+    button.classList.add(
+      "stop"
+    );
+
+
+    status.textContent =
+      "バーコードを枠内に合わせてください";
+
+  });
+
+}
+
+
+/*
+ * ====================================
+ * カメラ停止
+ * ====================================
+ */
+
+
+function stopCamera() {
+
+  try {
+
+    Quagga.stop();
+
+  } catch (e) {}
+
+
+  scanning =
+    false;
+
+
+  document
+    .getElementById(
+      "interactive"
+    )
+    .style.display =
+    "none";
+
+
+  const button =
+    document.getElementById(
+      "cameraBtn"
+    );
+
+
+  button.disabled =
+    false;
+
+
+  button.textContent =
+    "📷 バーコードを読み取る";
+
+
+  button.classList.remove(
+    "stop"
+  );
+
+
+  document
+    .getElementById(
+      "status"
+    )
+    .textContent =
+    "カメラ準備OK";
+
+}
+
+
+/*
+ * ====================================
+ * 数量
+ * ====================================
+ */
+
+
+function changeQuantity(delta) {
+
+  const input =
+    document.getElementById(
+      "quantity"
+    );
+
+
+  let value =
+    parseInt(
+      input.value || "0",
+      10
+    );
+
+
+  if (isNaN(value)) {
+
+    value = 0;
+
+  }
+
+
+  value += delta;
+
+
+  input.value =
+    value;
+
+}
+
+
+/*
+ * ====================================
+ * 効果音
+ * ====================================
+ */
+
+
+function beep() {
+
+  try {
+
+    const AudioContext =
+      window.AudioContext ||
+      window.webkitAudioContext;
+
+
+    if (!AudioContext) {
+
+      return;
+
+    }
+
+
+    const context =
+      new AudioContext();
+
+
+    const oscillator =
+      context.createOscillator();
+
+
+    const gain =
+      context.createGain();
+
+
+    oscillator.connect(gain);
+
+    gain.connect(
+      context.destination
+    );
+
+
+    oscillator.frequency.value =
+      880;
+
+
+    gain.gain.setValueAtTime(
+      0.3,
+      context.currentTime
+    );
+
+
+    gain.gain.exponentialRampToValueAtTime(
+      0.001,
+      context.currentTime + 0.25
+    );
+
+
+    oscillator.start();
+
+
+    oscillator.stop(
+      context.currentTime + 0.25
+    );
+
+
+  } catch (e) {
+
+    console.log(e);
+
+  }
+
+}
+
+
+/*
+ * ====================================
+ * メッセージ
+ * ====================================
+ */
+
+
+function showMessage(
+  text,
+  type
+) {
+
+  const element =
+    document.getElementById(
+      "message"
+    );
+
+
+  element.textContent =
+    text;
+
+
+  element.className =
+    type;
+
+
+  element.style.display =
+    "block";
+
+
+  setTimeout(
+    function() {
+
+      element.className =
+        "";
+
+      element.style.display =
+        "none";
+
+    },
+    5000
+  );
+
+}
+
+</script>
+
+
+</body>
+
+</html>
+```
 
